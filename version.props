@@ -1,0 +1,8 @@
+<Project>
+  <!-- Central version file. Single source of truth for Windows, and later Android (versionCode/versionName). -->
+  <PropertyGroup>
+    <FileSortVersionName>1.0.0</FileSortVersionName>
+    <FileSortVersionCode>1</FileSortVersionCode>
+    <FileSortApplicationId>com.filesort.organizer</FileSortApplicationId>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/FileSort.Core/FileSort.Core.csproj" />
+  <Project Path="src/FileSort.Desktop/FileSort.Desktop.csproj" />
+  <Project Path="tests/FileSort.Core.Tests/FileSort.Core.Tests.csproj" />
+</Solution>

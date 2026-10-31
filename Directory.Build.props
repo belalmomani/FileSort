@@ -1,0 +1,14 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)version.props" />
+  <PropertyGroup>
+    <Version>$(FileSortVersionName)</Version>
+    <AssemblyVersion>$(FileSortVersionName).0</AssemblyVersion>
+    <FileVersion>$(FileSortVersionName).$(FileSortVersionCode)</FileVersion>
+    <InformationalVersion>$(FileSortVersionName)</InformationalVersion>
+    <Product>FileSort</Product>
+    <Company>FileSort</Company>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+</Project>
