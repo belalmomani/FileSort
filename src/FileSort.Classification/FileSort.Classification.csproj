@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>FileSort.Classification</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FileSort.Core\FileSort.Core.csproj" />
+    <ProjectReference Include="..\FileSort.Data\FileSort.Data.csproj" />
+  </ItemGroup>
+</Project>

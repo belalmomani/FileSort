@@ -8,7 +8,7 @@ using FileSort.Desktop.Services;
 
 namespace FileSort.Desktop.ViewModels;
 
-public sealed class MainViewModel : ObservableObject
+public sealed partial class MainViewModel : ObservableObject
 {
     private const int MaxSearchResults = 5000;
 
@@ -155,6 +155,7 @@ public sealed class MainViewModel : ObservableObject
     public void Start()
     {
         LoadQuickAccess();
+        LoadClassificationLists();
         _ = RefreshDrivesAsync();
         _ = NavigateToAsync(PathUtil.ThisPc);
     }
@@ -168,8 +169,12 @@ public sealed class MainViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            var listing = await Task.Run(() =>
-                path == PathUtil.ThisPc ? _fs.ListDrives() : _fs.List(path, showHidden));
+            var (listing, map) = await Task.Run(() =>
+            {
+                var l = path == PathUtil.ThisPc ? _fs.ListDrives() : _fs.List(path, showHidden);
+                var m = path == PathUtil.ThisPc || l.Error != ListingError.None ? EmptyMap() : LoadBadgeMap(path);
+                return (l, m);
+            });
 
             if (id != _navId) return true; // superseded by a newer navigation
 
@@ -182,6 +187,7 @@ public sealed class MainViewModel : ObservableObject
             ErrorText = null;
             if (record) _history.Navigate(path);
             _currentPath = path;
+            _classMap = map;
             IsSearchMode = false;
             _searchLimitReached = false;
             SearchText = "";
@@ -285,7 +291,13 @@ public sealed class MainViewModel : ObservableObject
     private void ReplaceEntries(IEnumerable<FileSystemEntry> items)
     {
         Entries.Clear();
-        foreach (var e in items) Entries.Add(new EntryViewModel(e));
+        foreach (var e in items)
+        {
+            if (!PassesFilter(e)) continue;
+            var vm = new EntryViewModel(e);
+            ApplyBadge(vm);
+            Entries.Add(vm);
+        }
     }
 
     // ----- search -----
@@ -342,6 +354,7 @@ public sealed class MainViewModel : ObservableObject
             {
                 _searchLimitReached = limit;
                 IsSearching = false;
+                await LoadBadgesForSearchAsync();
                 ApplySort();
             }
         }
@@ -421,6 +434,7 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(SelectedEntry));
         RebuildProperties();
         UpdateStatus();
+        SyncClassificationPanel();
     }
 
     private void RebuildProperties()
@@ -470,6 +484,7 @@ public sealed class MainViewModel : ObservableObject
     private void RefreshLocalized()
     {
         LoadQuickAccess();
+        ReloadClassificationLocalization();
         RebuildDrives();
         ReplaceEntries(FileSystemService.Sort(_raw, _sortField, _sortAscending));
         RebuildProperties();

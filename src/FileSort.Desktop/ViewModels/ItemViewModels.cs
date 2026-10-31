@@ -1,4 +1,5 @@
 using System.IO;
+using System.Windows.Media;
 using FileSort.Core.Models;
 using FileSort.Core.Services;
 using FileSort.Desktop.Services;
@@ -9,7 +10,7 @@ public enum ViewMode { Details, Icons, Thumbnails }
 
 public sealed record PropertyRow(string Label, string Value);
 
-public sealed class EntryViewModel
+public sealed class EntryViewModel : ObservableObject
 {
     private static readonly HashSet<string> ThumbExt = new(StringComparer.OrdinalIgnoreCase)
         { ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tif", ".tiff", ".ico" };
@@ -39,6 +40,30 @@ public sealed class EntryViewModel
     public string AttributesText { get; }
     public string? ThumbnailPath { get; }
     public double Opacity => Entry.IsHidden ? 0.55 : 1.0;
+
+    public string? CategoryName { get; private set; }
+    public Brush? CategoryBrush { get; private set; }
+    public string? PriorityText { get; private set; }
+    public Brush? PriorityBrush { get; private set; }
+    public string? Note { get; private set; }
+    public bool HasCategory => CategoryName is not null;
+    public bool HasPriority => PriorityText is not null;
+
+    public void SetBadge(string? categoryName, string? categoryColor, string? priorityText, int? priorityLevel, string? note)
+    {
+        CategoryName = categoryName;
+        CategoryBrush = categoryColor is null ? null : BrushUtil.FromHex(categoryColor);
+        PriorityText = priorityText;
+        PriorityBrush = priorityLevel is int l ? BrushUtil.PriorityBrush(l) : null;
+        Note = note;
+        OnPropertyChanged(nameof(CategoryName));
+        OnPropertyChanged(nameof(CategoryBrush));
+        OnPropertyChanged(nameof(PriorityText));
+        OnPropertyChanged(nameof(PriorityBrush));
+        OnPropertyChanged(nameof(Note));
+        OnPropertyChanged(nameof(HasCategory));
+        OnPropertyChanged(nameof(HasPriority));
+    }
 
     // Display icons only. This is NOT file classification (classification is always manual, Phase 2).
     private static string GlyphFor(FileSystemEntry e)
@@ -116,4 +141,33 @@ public sealed class QuickAccessItemViewModel
     public string Path { get; }
     public string Name { get; }
     public string Glyph { get; }
+}
+
+public sealed class CategoryItemViewModel : ObservableObject
+{
+    private bool _isSelected;
+    public CategoryItemViewModel(Category c)
+    {
+        Id = c.Id; Name = c.Name; ColorHex = c.ColorHex; Brush = BrushUtil.FromHex(c.ColorHex);
+    }
+    public int Id { get; }
+    public string Name { get; }
+    public string ColorHex { get; }
+    public Brush Brush { get; }
+    public bool IsSelected { get => _isSelected; set => Set(ref _isSelected, value); }
+}
+
+public sealed class PriorityItemViewModel : ObservableObject
+{
+    private bool _isSelected;
+    public PriorityItemViewModel(Priority p)
+    {
+        Id = p.Id; Level = p.Level; Key = p.Key; Name = Loc.Get("Pri_" + p.Key); Brush = BrushUtil.PriorityBrush(p.Level);
+    }
+    public int Id { get; }
+    public int Level { get; }
+    public string Key { get; }
+    public string Name { get; }
+    public Brush Brush { get; }
+    public bool IsSelected { get => _isSelected; set => Set(ref _isSelected, value); }
 }

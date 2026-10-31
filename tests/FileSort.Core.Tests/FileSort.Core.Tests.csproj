@@ -11,6 +11,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\FileSort.Core\FileSort.Core.csproj" />
+    <ProjectReference Include="..\..\src\FileSort.Data\FileSort.Data.csproj" />
+    <ProjectReference Include="..\..\src\FileSort.Classification\FileSort.Classification.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />

@@ -1,0 +1,111 @@
+<Window x:Class="FileSort.Desktop.CategoriesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{DynamicResource Cat_Title}" Width="760" Height="560" MinWidth="640" MinHeight="460"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BgBrush}" Foreground="{DynamicResource TextBrush}"
+        FontFamily="Segoe UI" FontSize="13">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolVis"/>
+    </Window.Resources>
+    <Grid Margin="14">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="14"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- list -->
+        <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="8" Padding="8"
+                BorderBrush="{DynamicResource LineBrush}" BorderThickness="1">
+            <DockPanel>
+                <Button DockPanel.Dock="Bottom" Style="{StaticResource AccentButton}" Margin="0,8,0,0"
+                        Content="{DynamicResource Cat_New}" Command="{Binding NewCommand}"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Items}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource SideButton}" CommandParameter="{Binding}"
+                                        Command="{Binding DataContext.SelectCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="12" Height="12" Fill="{Binding Brush}" Margin="0,0,8,0"/>
+                                        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- editor -->
+        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="{DynamicResource Cat_Name}" Foreground="{DynamicResource SubTextBrush}" FontSize="11"/>
+                <TextBox Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}" MaxLength="50" Margin="0,4,0,14"/>
+
+                <TextBlock Text="{DynamicResource Cat_Color}" Foreground="{DynamicResource SubTextBrush}" FontSize="11"/>
+                <ItemsControl ItemsSource="{Binding Palette}" Margin="0,4,0,8">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <ToggleButton Style="{StaticResource SwatchButton}" Background="{Binding Brush}"
+                                          IsChecked="{Binding IsSelected, Mode=OneWay}" CommandParameter="{Binding}"
+                                          Command="{Binding DataContext.PickColorCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Border CornerRadius="12" Background="{Binding EditBrush}" Padding="12,4" HorizontalAlignment="Left" Margin="0,0,0,14">
+                    <TextBlock Text="{Binding EditName}" Foreground="White" FontWeight="SemiBold" MinWidth="40"/>
+                </Border>
+
+                <StackPanel Orientation="Horizontal">
+                    <Button Style="{StaticResource AccentButton}" Content="{DynamicResource Cat_Save}" Command="{Binding SaveCommand}"/>
+                    <Button Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"
+                            Content="{DynamicResource Cat_Delete}" Command="{Binding DeleteCommand}"/>
+                </StackPanel>
+
+                <TextBlock Text="{Binding Message}" Margin="0,10,0,0" TextWrapping="Wrap" Foreground="{DynamicResource SubTextBrush}"/>
+
+                <!-- delete flow when the category has linked files -->
+                <Border Margin="0,16,0,0" Padding="12" CornerRadius="8" Background="{DynamicResource SurfaceBrush}"
+                        BorderBrush="{DynamicResource LineBrush}" BorderThickness="1"
+                        Visibility="{Binding IsDeleting, Converter={StaticResource BoolVis}}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding UsageText}" TextWrapping="Wrap" FontWeight="SemiBold"/>
+                        <TextBlock Text="{DynamicResource Cat_ReassignTo}" Margin="0,10,0,4" Foreground="{DynamicResource SubTextBrush}"/>
+                        <ItemsControl ItemsSource="{Binding ReassignTargets}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <ToggleButton Style="{StaticResource PillToggle}" Margin="2,3"
+                                                  IsChecked="{Binding IsSelected, Mode=OneWay}" CommandParameter="{Binding}"
+                                                  Command="{Binding DataContext.PickTargetCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="10" Height="10" Fill="{Binding Brush}" Margin="0,0,6,0"/>
+                                            <TextBlock Text="{Binding Name}"/>
+                                        </StackPanel>
+                                    </ToggleButton>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <WrapPanel Margin="0,12,0,0">
+                            <Button Style="{StaticResource AccentButton}" Margin="0,0,8,6"
+                                    Content="{DynamicResource Cat_DoReassign}" Command="{Binding ReassignCommand}"/>
+                            <Button Style="{StaticResource SecondaryButton}" Margin="0,0,8,6"
+                                    Content="{DynamicResource Cat_DoClear}" Command="{Binding ClearAndDeleteCommand}"/>
+                            <Button Style="{StaticResource SecondaryButton}" Margin="0,0,0,6"
+                                    Content="{DynamicResource Cat_Cancel}" Command="{Binding CancelDeleteCommand}"/>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

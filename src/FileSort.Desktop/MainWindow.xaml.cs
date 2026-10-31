@@ -23,7 +23,7 @@ public partial class MainWindow : Window
         _vm.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(MainViewModel.ViewMode)) ApplyViewMode(_vm.ViewMode);
-            if (e.PropertyName is nameof(MainViewModel.ViewMode) or nameof(MainViewModel.SortField)) SyncPills();
+            if (e.PropertyName is nameof(MainViewModel.ViewMode) or nameof(MainViewModel.SortField) or nameof(MainViewModel.ClassFilter)) SyncPills();
         };
         App.LanguageChanged += ApplyLanguage;
         Closed += (_, _) => App.LanguageChanged -= ApplyLanguage;
@@ -43,6 +43,8 @@ public partial class MainWindow : Window
         cols[1].Header = Loc.Get("Col_Modified");
         cols[2].Header = Loc.Get("Col_Type");
         cols[3].Header = Loc.Get("Col_Size");
+        cols[4].Header = Loc.Get("Col_Category");
+        cols[5].Header = Loc.Get("Col_Priority");
     }
 
     private void ApplyViewMode(ViewMode mode)
@@ -77,12 +79,34 @@ public partial class MainWindow : Window
         SortModified.IsChecked = _vm.SortField == SortField.Modified;
         SortCreated.IsChecked = _vm.SortField == SortField.Created;
         SortType.IsChecked = _vm.SortField == SortField.Type;
+        FilterAll.IsChecked = _vm.ClassFilter == ClassFilter.All;
+        FilterClassified.IsChecked = _vm.ClassFilter == ClassFilter.Classified;
+        FilterUnclassified.IsChecked = _vm.ClassFilter == ClassFilter.Unclassified;
     }
 
     private void ViewPill_Click(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement { Tag: string t }) _vm.ViewMode = Enum.Parse<ViewMode>(t);
         SyncPills();
+    }
+
+    private void FilterPill_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: string t }) _vm.ClassFilter = Enum.Parse<ClassFilter>(t);
+        SyncPills();
+    }
+
+    private LibraryWindow? _library;
+
+    private void Categories_Click(object sender, RoutedEventArgs e)
+        => new CategoriesWindow(_vm.ReloadCategories) { Owner = this }.ShowDialog();
+
+    private void Library_Click(object sender, RoutedEventArgs e)
+    {
+        if (_library is not null) { _library.Activate(); return; }
+        _library = new LibraryWindow(path => _vm.NavigateCommand.Execute(path), _vm.ReloadBadges) { Owner = this };
+        _library.Closed += (_, _) => _library = null;
+        _library.Show();
     }
 
     private void SortPill_Click(object sender, RoutedEventArgs e)

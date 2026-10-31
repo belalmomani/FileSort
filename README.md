@@ -5,10 +5,15 @@
 - الإصدار الحالي: انظر `version.props`
 
 ## الحالة
-المرحلة 1 (Windows File Explorer Foundation): مستكشف للقراءة فقط. لا يوجد نقل أو حذف أو إعادة تسمية.
+- المرحلة 1: مستكشف الملفات (قراءة فقط).
+- المرحلة 2: قاعدة بيانات SQLite ومحرك التصنيف اليدوي (تصنيفات، أهمية، ملاحظات، مكتبة الملفات المصنفة). لا يوجد نقل أو حذف أو إعادة تسمية للملفات حتى الآن.
+
+بيانات المستخدم: `%LOCALAPPDATA%\FileSort\filesort.db`، والنسخ الاحتياطية في `%LOCALAPPDATA%\FileSort\backups`.
 
 ## البنية
 - `src/FileSort.Core` — منطق الملفات (net10.0)
+- `src/FileSort.Data` — قاعدة البيانات (SQLite، ترحيلات، نسخ احتياطي)
+- `src/FileSort.Classification` — محرك التصنيف اليدوي
 - `src/FileSort.Desktop` — واجهة WPF (net10.0-windows)
 - `tests/FileSort.Core.Tests` — اختبارات xUnit
 - `version.props` — ملف الإصدار المركزي

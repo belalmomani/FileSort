@@ -12,6 +12,7 @@
     <Window.Resources>
         <local:ThumbnailConverter x:Key="Thumb"/>
         <BooleanToVisibilityConverter x:Key="BoolVis"/>
+        <local:InverseBoolVisConverter x:Key="InverseBoolVis"/>
 
         <ItemsPanelTemplate x:Key="WrapPanelTpl"><WrapPanel/></ItemsPanelTemplate>
         <ItemsPanelTemplate x:Key="StackPanelTpl"><VirtualizingStackPanel/></ItemsPanelTemplate>
@@ -22,6 +23,12 @@
                            HorizontalAlignment="Center" Opacity="{Binding Opacity}"/>
                 <TextBlock Text="{Binding Name}" TextAlignment="Center" TextWrapping="Wrap"
                            TextTrimming="CharacterEllipsis" MaxHeight="36" Margin="0,4,0,0"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,0"
+                            Visibility="{Binding HasCategory, Converter={StaticResource BoolVis}}">
+                    <Ellipse Width="8" Height="8" Fill="{Binding CategoryBrush}" Margin="0,0,4,0"/>
+                    <TextBlock Text="{Binding CategoryName}" FontSize="11" Foreground="{DynamicResource SubTextBrush}"
+                               TextTrimming="CharacterEllipsis" MaxWidth="80"/>
+                </StackPanel>
             </StackPanel>
         </DataTemplate>
 
@@ -35,6 +42,12 @@
                 </Grid>
                 <TextBlock Text="{Binding Name}" TextAlignment="Center" TextWrapping="Wrap"
                            TextTrimming="CharacterEllipsis" MaxHeight="36" Margin="0,4,0,0"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,0"
+                            Visibility="{Binding HasCategory, Converter={StaticResource BoolVis}}">
+                    <Ellipse Width="8" Height="8" Fill="{Binding CategoryBrush}" Margin="0,0,4,0"/>
+                    <TextBlock Text="{Binding CategoryName}" FontSize="11" Foreground="{DynamicResource SubTextBrush}"
+                               TextTrimming="CharacterEllipsis" MaxWidth="80"/>
+                </StackPanel>
             </StackPanel>
         </DataTemplate>
     </Window.Resources>
@@ -48,6 +61,7 @@
 
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -113,6 +127,10 @@
                 </Grid>
 
                 <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="8,0,0,0">
+                    <Button Style="{StaticResource ToolButton}" Content="🏷" FontFamily="Segoe UI Emoji" Click="Categories_Click"
+                            ToolTip="{DynamicResource Btn_Categories}"/>
+                    <Button Style="{StaticResource ToolButton}" Content="📚" FontFamily="Segoe UI Emoji" Click="Library_Click"
+                            ToolTip="{DynamicResource Btn_Library}"/>
                     <Button Style="{StaticResource ToolButton}" Content="◐" Click="Theme_Click"
                             ToolTip="{DynamicResource Theme_Tip}"/>
                     <Button Style="{StaticResource ToolButton}" Width="40" FontSize="13"
@@ -125,12 +143,7 @@
         <!-- Row 1: breadcrumb + view/sort pills -->
         <Border Grid.Row="1" Padding="8,6" Background="{DynamicResource BgBrush}">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <ScrollViewer Grid.Column="0" FlowDirection="LeftToRight"
+                <ScrollViewer FlowDirection="LeftToRight"
                               HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
                     <StackPanel Orientation="Horizontal">
                         <Button Style="{StaticResource CrumbButton}" Content="{DynamicResource ThisPc}"
@@ -154,7 +167,12 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
+            </Grid>
+        </Border>
+
+        <!-- Row 2: view / sort / filter pills -->
+        <Border Grid.Row="2" Padding="8,0,8,6" Background="{DynamicResource BgBrush}">
+                <WrapPanel>
                     <ToggleButton x:Name="ViewDetails" Style="{StaticResource PillToggle}" Tag="Details"
                                   Content="{DynamicResource View_Details}" Click="ViewPill_Click"/>
                     <ToggleButton x:Name="ViewIcons" Style="{StaticResource PillToggle}" Tag="Icons"
@@ -180,12 +198,17 @@
                     <ToggleButton Style="{StaticResource PillToggle}" Margin="12,0,0,0"
                                   Content="{DynamicResource ShowHidden}"
                                   IsChecked="{Binding ShowHidden, Mode=TwoWay}"/>
-                </StackPanel>
-            </Grid>
+                    <ToggleButton x:Name="FilterAll" Style="{StaticResource PillToggle}" Tag="All" Margin="12,0,2,0"
+                                  Content="{DynamicResource Filter_All}" Click="FilterPill_Click"/>
+                    <ToggleButton x:Name="FilterClassified" Style="{StaticResource PillToggle}" Tag="Classified"
+                                  Content="{DynamicResource Filter_Classified}" Click="FilterPill_Click"/>
+                    <ToggleButton x:Name="FilterUnclassified" Style="{StaticResource PillToggle}" Tag="Unclassified"
+                                  Content="{DynamicResource Filter_Unclassified}" Click="FilterPill_Click"/>
+                </WrapPanel>
         </Border>
 
-        <!-- Row 2: error banner -->
-        <Border Grid.Row="2" Background="{DynamicResource ErrorBgBrush}" Padding="12,6"
+        <!-- Row 3: error banner -->
+        <Border Grid.Row="3" Background="{DynamicResource ErrorBgBrush}" Padding="12,6"
                 Visibility="{Binding HasError, Converter={StaticResource BoolVis}}">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -199,14 +222,14 @@
             </Grid>
         </Border>
 
-        <!-- Row 3: sidebar | files | details -->
-        <Grid Grid.Row="3">
+        <!-- Row 4: sidebar | files | details -->
+        <Grid Grid.Row="4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="230" MinWidth="160"/>
                 <ColumnDefinition Width="5"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="5"/>
-                <ColumnDefinition Width="290" MinWidth="200"/>
+                <ColumnDefinition Width="320" MinWidth="240"/>
             </Grid.ColumnDefinitions>
 
             <!-- Sidebar -->
@@ -273,7 +296,7 @@
                           MouseDoubleClick="FileList_MouseDoubleClick" KeyDown="FileList_KeyDown">
                     <ListView.View>
                         <GridView>
-                            <GridViewColumn Width="340">
+                            <GridViewColumn Width="280">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -287,7 +310,24 @@
                             </GridViewColumn>
                             <GridViewColumn Width="150" DisplayMemberBinding="{Binding ModifiedText}"/>
                             <GridViewColumn Width="140" DisplayMemberBinding="{Binding TypeText}"/>
-                            <GridViewColumn Width="100" DisplayMemberBinding="{Binding SizeText}"/>
+                            <GridViewColumn Width="90" DisplayMemberBinding="{Binding SizeText}"/>
+                            <GridViewColumn Width="140">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Visibility="{Binding HasCategory, Converter={StaticResource BoolVis}}">
+                                            <Ellipse Width="10" Height="10" Fill="{Binding CategoryBrush}" Margin="0,0,6,0"/>
+                                            <TextBlock Text="{Binding CategoryName}" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Width="110">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding PriorityText}" Foreground="{Binding PriorityBrush}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
                         </GridView>
                     </ListView.View>
                 </ListView>
@@ -342,13 +382,74 @@
                             <TextBlock Text="{Binding MultiSizeText}" Foreground="{DynamicResource SubTextBrush}"
                                        TextWrapping="Wrap" Margin="0,6,0,0"/>
                         </StackPanel>
+
+                        <!-- Manual classification -->
+                        <StackPanel Margin="0,18,0,0" Visibility="{Binding IsClassifiable, Converter={StaticResource BoolVis}}">
+                            <Border BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" Margin="0,0,0,12"/>
+                            <TextBlock Text="{DynamicResource Cls_Title}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,8"/>
+
+                            <TextBlock Text="{DynamicResource Cls_Category}" FontSize="11" Foreground="{DynamicResource SubTextBrush}"/>
+                            <ItemsControl ItemsSource="{Binding Categories}" Margin="0,4,0,8">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <ToggleButton Style="{StaticResource PillToggle}" Margin="2,3"
+                                                      IsChecked="{Binding IsSelected, Mode=OneWay}" CommandParameter="{Binding}"
+                                                      Command="{Binding DataContext.SelectCategoryCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse Width="10" Height="10" Fill="{Binding Brush}" Margin="0,0,6,0"/>
+                                                <TextBlock Text="{Binding Name}"/>
+                                            </StackPanel>
+                                        </ToggleButton>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Text="{DynamicResource Cls_NoCategories}" TextWrapping="Wrap" FontSize="11"
+                                       Foreground="{DynamicResource SubTextBrush}"
+                                       Visibility="{Binding HasCategories, Converter={StaticResource InverseBoolVis}}"/>
+
+                            <TextBlock Text="{DynamicResource Cls_Priority}" FontSize="11" Foreground="{DynamicResource SubTextBrush}"/>
+                            <ItemsControl ItemsSource="{Binding Priorities}" Margin="0,4,0,8">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <ToggleButton Style="{StaticResource PillToggle}" Margin="2,3"
+                                                      IsChecked="{Binding IsSelected, Mode=OneWay}" CommandParameter="{Binding}"
+                                                      Command="{Binding DataContext.SelectPriorityCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="{Binding Brush}" Margin="0,0,6,0"/>
+                                                <TextBlock Text="{Binding Name}"/>
+                                            </StackPanel>
+                                        </ToggleButton>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock Text="{DynamicResource Cls_Note}" FontSize="11" Foreground="{DynamicResource SubTextBrush}"/>
+                            <TextBox Text="{Binding NoteText, UpdateSourceTrigger=PropertyChanged}" Height="64" Margin="0,4,0,8"
+                                     AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" MaxLength="1000"
+                                     VerticalContentAlignment="Top"/>
+
+                            <ToggleButton Style="{StaticResource PillToggle}" HorizontalAlignment="Left" Margin="0,0,0,8"
+                                          Content="{DynamicResource Cls_IncludeContents}" IsChecked="{Binding IncludeContents, Mode=TwoWay}"
+                                          Visibility="{Binding HasFolderSelected, Converter={StaticResource BoolVis}}"/>
+
+                            <WrapPanel>
+                                <Button Style="{StaticResource AccentButton}" Margin="0,0,8,6"
+                                        Content="{DynamicResource Cls_Apply}" Command="{Binding ApplyClassificationCommand}"/>
+                                <Button Style="{StaticResource SecondaryButton}" Margin="0,0,0,6"
+                                        Content="{DynamicResource Cls_Clear}" Command="{Binding ClearClassificationCommand}"/>
+                            </WrapPanel>
+                            <TextBlock Text="{Binding PanelMessage}" TextWrapping="Wrap" Foreground="{DynamicResource SubTextBrush}"/>
+                        </StackPanel>
+
                     </StackPanel>
                 </ScrollViewer>
             </Border>
         </Grid>
 
-        <!-- Row 4: status bar -->
-        <Border Grid.Row="4" Background="{DynamicResource SurfaceBrush}"
+        <!-- Row 5: status bar -->
+        <Border Grid.Row="5" Background="{DynamicResource SurfaceBrush}"
                 BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" Padding="12,4">
             <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource SubTextBrush}" FontSize="12"/>
         </Border>

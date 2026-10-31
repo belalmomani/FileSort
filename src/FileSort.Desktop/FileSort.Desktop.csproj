@@ -9,5 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\FileSort.Core\FileSort.Core.csproj" />
+    <ProjectReference Include="..\FileSort.Data\FileSort.Data.csproj" />
+    <ProjectReference Include="..\FileSort.Classification\FileSort.Classification.csproj" />
   </ItemGroup>
 </Project>
