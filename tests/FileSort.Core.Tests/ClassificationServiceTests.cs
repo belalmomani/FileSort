@@ -20,7 +20,7 @@ public class ClassificationServiceTests
 
     private static string MakeFile(TempDir t, string name, string content = "x")
     {
-        var p = t.Combine(name);
+        var p = t.Combine(name.Split('/'));   // build with real separators so the string matches the normalized stored path
         Directory.CreateDirectory(Path.GetDirectoryName(p)!);
         File.WriteAllText(p, content);
         return p;
