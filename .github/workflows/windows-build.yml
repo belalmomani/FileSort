@@ -1,0 +1,81 @@
+name: Windows Build
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Read and validate version
+        id: ver
+        shell: pwsh
+        run: |
+          [xml]$p = Get-Content version.props
+          $name = [string]$p.Project.PropertyGroup.FileSortVersionName
+          $code = [string]$p.Project.PropertyGroup.FileSortVersionCode
+          if ($name -notmatch '^\d+\.\d+\.\d+$') { throw "Invalid versionName: $name" }
+          if ($code -notmatch '^\d+$' -or [int]$code -lt 1) { throw "Invalid versionCode: $code" }
+          "name=$name" >> $env:GITHUB_OUTPUT
+          "code=$code" >> $env:GITHUB_OUTPUT
+          Write-Host "FileSort version $name (code $code)"
+
+      - name: Release tag must match version
+        if: github.event_name == 'release'
+        shell: pwsh
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          if ($env:TAG -ne "v${{ steps.ver.outputs.name }}") {
+            throw "Release tag '$env:TAG' does not match version.props (v${{ steps.ver.outputs.name }}). Update version.props first."
+          }
+
+      - name: Build
+        run: dotnet build FileSort.slnx -c Release
+
+      - name: Test
+        run: dotnet test tests/FileSort.Core.Tests/FileSort.Core.Tests.csproj -c Release --no-build --logger "trx;LogFileName=results.trx" --results-directory TestResults
+
+      - name: Publish Windows app (self-contained, x64)
+        run: dotnet publish src/FileSort.Desktop/FileSort.Desktop.csproj -c Release -r win-x64 --self-contained true -o publish/FileSort
+
+      - name: Package portable zip
+        id: pack
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force artifacts | Out-Null
+          $file = "artifacts/FileSort-Windows-Portable-v${{ steps.ver.outputs.name }}.zip"
+          Compress-Archive -Path publish/FileSort/* -DestinationPath $file
+          "file=$file" >> $env:GITHUB_OUTPUT
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/*.trx
+
+      - name: Upload portable build
+        uses: actions/upload-artifact@v4
+        with:
+          name: FileSort-Windows-Portable-v${{ steps.ver.outputs.name }}
+          path: ${{ steps.pack.outputs.file }}
+
+      - name: Attach to GitHub Release
+        if: github.event_name == 'release'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$env:TAG" "${{ steps.pack.outputs.file }}"
